@@ -3,8 +3,8 @@
 // @namespace     https://www.wanikani.com
 // @description   Allow audio to be played after review meaning questions, when reading has been previously answered correctly. Also includes setting for enabling autoplay when answer is incorrect (default: off). Originally by Takuya Kobayashi.
 // @author        seanblue
-// @version       1.0.0
-// @include       http*://www.wanikani.com/review/session*
+// @version       1.0.1
+// @include       https://www.wanikani.com/review/session*
 // @run-at        document-end
 // @grant         none
 // ==/UserScript==
@@ -12,45 +12,42 @@
 // Original version by Takuya Kobayashi: https://greasyfork.org/en/scripts/10184-wanikani-review-audio-tweak
 // This version is a reupload with the new URL for audio files.
 
-(function () {
+(function ($) {
 	'use strict';
 	// BEGIN SETTINGS //
-	var enableAutoPlayWhenIncorrect = false; // change to 'true' to enable
+	const enableAutoPlayWhenIncorrect = false; // change to 'true' to enable
 	// END SETTINGS //
 
-	var audioUrlPrefix = 'https://cdn.wanikani.com/subjects/audio/';
-
 	function itemStat(item) {
-		var itemStatKey = (item.voc ? 'v' : item.kan ? 'k' : 'r') + item.id;
+		let itemStatKey = (item.voc ? 'v' : item.kan ? 'k' : 'r') + item.id;
 		return ($.jStorage.get(itemStatKey) || {});
 	}
 
-	additionalContent.audio = function (audioAutoplay) {
-		var buttonElem, liElem, currentItem, questionType, audioElem;
-		currentItem = $.jStorage.get('currentItem');
-		questionType = $.jStorage.get('questionType');
+	window.additionalContent.audio = function (audioAutoplay) {
+		let currentItem = $.jStorage.get('currentItem');
+		let questionType = $.jStorage.get('questionType');
 
 		$('audio').remove();
 
 		if (currentItem.aud && (questionType === 'reading' || itemStat(currentItem).rc >= 1)) {
-			liElem = $('#option-audio');
-			buttonElem = liElem.find('button');
+			let liElem = $('#option-audio');
+			let buttonElem = liElem.find('button');
+
 			if (!enableAutoPlayWhenIncorrect && !$('#answer-form fieldset').hasClass('correct')) {
 				audioAutoplay = false;
 			}
 
 			buttonElem.removeAttr('disabled');
-			audioElem = $('<audio></audio>', { autoplay: audioAutoplay }).appendTo(liElem.removeClass('disabled').children('span'));
+			let audioElem = $('<audio></audio>', { autoplay: audioAutoplay }).appendTo(liElem.removeClass('disabled').children('span'));
 
-			$('<source></source>', {
-				src: audioUrlPrefix + currentItem.aud,
-				type: 'audio/mpeg'
-			}).appendTo(audioElem);
+			for (let i = 0; i < currentItem.aud.length; i++) {
+				let audio = currentItem.aud[i];
 
-			$('<source></source>', {
-				src: audioUrlPrefix + currentItem.aud.replace('.mp3', '.ogg'),
-				type: 'audio/ogg'
-			}).appendTo(audioElem);
+				$('<source></source>', {
+					src: audio.url,
+					type: audio.content_type
+				}).appendTo(audioElem);
+			}
 
 			audioElem[0].addEventListener('play', function () {
 				buttonElem.removeClass('audio-idle').addClass('audio-play');
@@ -73,4 +70,4 @@
 			});
 		}
 	};
-}());
+}(window.jQuery));
