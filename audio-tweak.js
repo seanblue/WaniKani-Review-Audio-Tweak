@@ -3,7 +3,7 @@
 // @namespace     https://www.wanikani.com
 // @description   Allow audio to be played after review meaning questions, when reading has been previously answered correctly. Also includes setting for enabling autoplay when answer is incorrect (default: off). Originally by Takuya Kobayashi.
 // @author        seanblue
-// @version       1.0.1
+// @version       1.0.2
 // @include       https://www.wanikani.com/review/session*
 // @run-at        document-end
 // @grant         none
@@ -43,10 +43,12 @@
 			for (let i = 0; i < currentItem.aud.length; i++) {
 				let audio = currentItem.aud[i];
 
-				$('<source></source>', {
-					src: audio.url,
-					type: audio.content_type
-				}).appendTo(audioElem);
+				if (audio.voice_actor_id == WaniKani.default_voice_actor_id) {
+					$('<source></source>', {
+						src: audio.url,
+						type: audio.content_type
+					}).appendTo(audioElem);
+				}
 			}
 
 			audioElem[0].addEventListener('play', function () {
@@ -65,7 +67,7 @@
 			liElem.off('click');
 			liElem.on('click', function () {
 				if ($('#user-response').is(':disabled')) {
-					$('audio').trigger('play');
+					$('audio.preferred').trigger('play');
 				}
 			});
 		}
